@@ -12,10 +12,13 @@ export const PeoplePage = () => {
   const [updatedList, setUpdatedList] = useState<Person[]>([]);
   const [searchParams] = useSearchParams();
 
+  const allowedSorts = ['name', 'sex', 'born', 'died'];
+  const sortParam = searchParams.get('sort');
+  const sort = sortParam && allowedSorts.includes(sortParam) ? sortParam : null;
+
   const sex = searchParams.get('sex');
   const query = searchParams.get('query');
   const centuries = searchParams.getAll('centuries');
-  const sort = searchParams.get('sort');
   const order = searchParams.get('order');
 
   useEffect(() => {
@@ -27,28 +30,6 @@ export const PeoplePage = () => {
       .catch(() => setErrorMessage('Something went wrong'))
       .finally(() => setIsLoading(false));
   }, []);
-
-  // const filterePeople = () => {
-  //   const filteredPeople = [...people];
-
-  //   if (sex === 'm' || sex === 'f') {
-  //     filteredPeople.filter(person => person.sex === sex);
-  //   }
-
-  //   if (centuries) {
-  //     filteredPeople.filter(
-  //       person => Math.floor(+person.born / 100) === +centuries - 1,
-  //     );
-  //   }
-
-  //   if (query) {
-  //     filteredPeople.filter(person => person.name.includes(query));
-  //   }
-
-  //   console.log(filteredPeople);
-
-  //   return filteredPeople;
-  // }
 
   useEffect(() => {
     let result = [...people];
@@ -64,8 +45,12 @@ export const PeoplePage = () => {
     }
 
     if (query) {
+      const q = query.toLowerCase();
+
       result = result.filter(e =>
-        e.name.toLowerCase().includes(query.toLowerCase()),
+        [e.name, e.motherName, e.fatherName].some(v =>
+          v?.toLowerCase().includes(q),
+        ),
       );
     }
 
@@ -95,7 +80,7 @@ export const PeoplePage = () => {
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
           <div className="column is-7-tablet is-narrow-desktop">
-            <PeopleFilters />
+            {!isLoading && people.length > 0 && <PeopleFilters />}
           </div>
 
           <div className="column">

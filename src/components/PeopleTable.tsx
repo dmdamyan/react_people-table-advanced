@@ -1,7 +1,12 @@
 import React from 'react';
 import { Person } from '../types';
 import { PersonLink } from './PersonLink';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Link,
+  useLocation,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import classNames from 'classnames';
 
 /* eslint-disable jsx-a11y/control-has-associated-label */
@@ -11,6 +16,7 @@ type Props = {
 
 export const PeopleTable: React.FC<Props> = ({ updatedList }) => {
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const { slug } = useParams();
 
   const currentSort = searchParams.get('sort');
@@ -146,7 +152,7 @@ export const PeopleTable: React.FC<Props> = ({ updatedList }) => {
           >
             <td>
               <Link
-                to={person.slug}
+                to={{ pathname: person.slug, search: location.search }}
                 className={person.sex === 'f' ? 'has-text-danger' : ''}
               >
                 {person.name}

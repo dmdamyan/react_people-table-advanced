@@ -1,9 +1,8 @@
 import classNames from 'classnames';
 import React from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 export const PeopleFilters: React.FC = () => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('query');
   const centuries = searchParams.getAll('centuries');
@@ -31,8 +30,6 @@ export const PeopleFilters: React.FC = () => {
     }
 
     setSearchParams(params);
-
-    navigate(`?${params.toString()}`);
   }
 
   function setCenturies(century: string) {
@@ -59,8 +56,6 @@ export const PeopleFilters: React.FC = () => {
 
     params.delete('query');
     setSearchParams(params);
-
-    navigate(`?${params.toString()}`);
   }
 
   function resetAllFilters() {
