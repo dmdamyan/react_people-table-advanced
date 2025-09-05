@@ -6,37 +6,35 @@ import classNames from 'classnames';
 
 /* eslint-disable jsx-a11y/control-has-associated-label */
 type Props = {
-  people: Person[];
   updatedList: Person[];
 };
 
-export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
+export const PeopleTable: React.FC<Props> = ({ updatedList }) => {
   const [searchParams] = useSearchParams();
   const { slug } = useParams();
 
-  const currentSort = searchParams.get('sort') || '';
-  const currentOrder = searchParams.get('order') || '';
+  const currentSort = searchParams.get('sort');
+  const currentOrder = searchParams.get('order');
 
   function getSortParams(sortField: string) {
-    const newSearchParams = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams);
 
     if (currentSort === sortField) {
-      if (currentOrder === 'asc') {
-        newSearchParams.set('order', 'desc');
+      if (!currentOrder) {
+        params.set('order', 'desc');
       } else if (currentOrder === 'desc') {
-        newSearchParams.delete('sort');
-        newSearchParams.delete('order');
+        params.delete('sort');
+        params.delete('order');
       }
     } else {
-      newSearchParams.set('sort', sortField);
-      newSearchParams.set('order', 'asc');
+      params.set('sort', sortField);
     }
 
-    return `?${newSearchParams.toString()}`;
+    return `?${params.toString()}`;
   }
 
   function findMotherInPeople(person: Person) {
-    const mother = people.find(p => p.name === person.motherName);
+    const mother = updatedList.find(p => p.name === person.motherName);
 
     if (mother) {
       return <PersonLink person={mother} />;
@@ -46,7 +44,7 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
   }
 
   function findFatherInPeople(person: Person) {
-    const father = people.find(p => p.name === person.fatherName);
+    const father = updatedList.find(p => p.name === person.fatherName);
 
     if (father) {
       return <PersonLink person={father} />;
@@ -54,22 +52,6 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
 
     return person.fatherName ? person.fatherName : '-';
   }
-
-  const peopleSort = (p1: Person, p2: Person) => {
-    if (currentSort === 'name' || currentSort === 'sex') {
-      return currentOrder === 'asc'
-        ? p1[currentSort].localeCompare(p2[currentSort])
-        : p2[currentSort].localeCompare(p1[currentSort]);
-    }
-
-    if (currentSort === 'born' || currentSort === 'died') {
-      return currentOrder === 'asc'
-        ? p1[currentSort] - p2[currentSort]
-        : p2[currentSort] - p1[currentSort];
-    }
-
-    return 0;
-  };
 
   return (
     <table
@@ -86,8 +68,7 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
                   <i
                     className={classNames({
                       'fas fa-sort': currentSort !== 'name',
-                      'fas fa-sort-up':
-                        currentOrder === 'asc' && currentSort === 'name',
+                      'fas fa-sort-up': !currentOrder && currentSort === 'name',
                       'fas fa-sort-down':
                         currentOrder === 'desc' && currentSort === 'name',
                     })}
@@ -105,8 +86,7 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
                   <i
                     className={classNames({
                       'fas fa-sort': currentSort !== 'sex',
-                      'fas fa-sort-up':
-                        currentOrder === 'asc' && currentSort === 'sex',
+                      'fas fa-sort-up': !currentOrder && currentSort === 'sex',
                       'fas fa-sort-down':
                         currentOrder === 'desc' && currentSort === 'sex',
                     })}
@@ -124,8 +104,7 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
                   <i
                     className={classNames({
                       'fas fa-sort': currentSort !== 'born',
-                      'fas fa-sort-up':
-                        currentOrder === 'asc' && currentSort === 'born',
+                      'fas fa-sort-up': !currentOrder && currentSort === 'born',
                       'fas fa-sort-down':
                         currentOrder === 'desc' && currentSort === 'born',
                     })}
@@ -143,8 +122,7 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
                   <i
                     className={classNames({
                       'fas fa-sort': currentSort !== 'died',
-                      'fas fa-sort-up':
-                        currentOrder === 'asc' && currentSort === 'died',
+                      'fas fa-sort-up': !currentOrder && currentSort === 'died',
                       'fas fa-sort-down':
                         currentOrder === 'desc' && currentSort === 'died',
                     })}
@@ -160,10 +138,7 @@ export const PeopleTable: React.FC<Props> = ({ people, updatedList }) => {
       </thead>
 
       <tbody>
-        {(!currentSort
-          ? people
-          : updatedList.sort((p1, p2) => peopleSort(p1, p2))
-        ).map(person => (
+        {updatedList.map(person => (
           <tr
             data-cy="person"
             key={person.slug}

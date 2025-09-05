@@ -23,7 +23,7 @@ export const Navbar = () => {
           </Link>
 
           <Link
-            // aria-current="page"
+            aria-current="page"
             className={classNames('navbar-item', {
               'has-background-grey-lighter': pathname.startsWith('/people'),
             })}

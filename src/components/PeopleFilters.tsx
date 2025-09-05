@@ -1,65 +1,76 @@
 import classNames from 'classnames';
 import React from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
-type Props = {
-  setHasPeopleFilter: React.Dispatch<React.SetStateAction<boolean>>;
-};
-
-export const PeopleFilters: React.FC<Props> = ({ setHasPeopleFilter }) => {
+export const PeopleFilters: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const query = searchParams.get('query') || '';
-  const centuryFilter = searchParams.getAll('centuryFilter') || ['all'];
-  const genderFilter = searchParams.get('genderFilter') || 'all';
-
-  if (centuryFilter.length === 0) {
-    searchParams.append('centuryFilter', 'all');
-  }
+  const query = searchParams.get('query');
+  const centuries = searchParams.getAll('centuries');
+  const sex = searchParams.get('sex');
 
   function setGenderFilter(filterElement: string) {
-    searchParams.set('genderFilter', filterElement);
+    const params = new URLSearchParams(searchParams);
 
-    if (filterElement !== 'all') {
-      setHasPeopleFilter(true);
+    if (filterElement === 'all') {
+      params.delete('sex');
     } else {
-      setHasPeopleFilter(false);
+      params.set('sex', filterElement);
     }
+
+    return `?${params.toString()}`;
   }
 
   function setQuery(event: React.ChangeEvent<HTMLInputElement>) {
-    const newSearchParams = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams);
 
-    newSearchParams.set('query', event.target.value);
-
-    setSearchParams(newSearchParams);
-  }
-
-  function setCenturyFilter(century: string) {
-    let updated = [...centuryFilter];
-
-    if (centuryFilter.includes('all')) {
-      updated = [century];
+    if (event.target.value !== '') {
+      params.set('query', event.target.value);
     } else {
-      if (!centuryFilter.includes(century)) {
-        updated = [...centuryFilter, century];
-      } else {
-        updated = [...centuryFilter.filter(e => e !== century)];
-      }
+      params.delete('query');
     }
 
-    if (updated.length === 0) {
-      updated = ['all'];
-    }
+    setSearchParams(params);
 
-    searchParams.delete('centuryFilter');
-    updated.forEach(e => searchParams.append('centuryFilter', e));
+    navigate(`?${params.toString()}`);
   }
 
-  function reset() {
-    const newSearchParams = new URLSearchParams(searchParams);
+  function setCenturies(century: string) {
+    const params = new URLSearchParams(searchParams);
 
-    newSearchParams.set('query', '');
-    setSearchParams(newSearchParams);
+    if (century === 'all') {
+      params.delete('centuries');
+
+      return `?${params.toString()}`;
+    }
+
+    const newCenturies = centuries.includes(century)
+      ? centuries.filter(c => c !== century)
+      : [...centuries, century];
+
+    params.delete('centuries');
+    newCenturies.forEach(e => params.append('centuries', e));
+
+    return `?${params.toString()}`;
+  }
+
+  function resetQuery() {
+    const params = new URLSearchParams(searchParams);
+
+    params.delete('query');
+    setSearchParams(params);
+
+    navigate(`?${params.toString()}`);
+  }
+
+  function resetAllFilters() {
+    const params = new URLSearchParams(searchParams);
+
+    params.delete('sex');
+    params.delete('query');
+    params.delete('centuries');
+
+    return `?${params.toString()}`;
   }
 
   return (
@@ -68,23 +79,20 @@ export const PeopleFilters: React.FC<Props> = ({ setHasPeopleFilter }) => {
 
       <p className="panel-tabs" data-cy="SexFilter">
         <Link
-          onClick={() => setGenderFilter('all')}
-          className={genderFilter === 'all' ? 'is-active' : ''}
-          to="#/people"
+          to={setGenderFilter('all')}
+          className={!sex || sex === 'all' ? 'is-active' : ''}
         >
           All
         </Link>
         <Link
-          onClick={() => setGenderFilter('male')}
-          className={genderFilter === 'male' ? 'is-active' : ''}
-          to="#/people?sex=m"
+          to={setGenderFilter('m')}
+          className={sex === 'm' ? 'is-active' : ''}
         >
           Male
         </Link>
         <Link
-          onClick={() => setGenderFilter('female')}
-          className={genderFilter === 'female' ? 'is-active' : ''}
-          to="#/people?sex=f"
+          to={setGenderFilter('f')}
+          className={sex === 'f' ? 'is-active' : ''}
         >
           Female
         </Link>
@@ -97,11 +105,11 @@ export const PeopleFilters: React.FC<Props> = ({ setHasPeopleFilter }) => {
             type="search"
             className="input"
             placeholder="Search"
-            value={query}
+            value={query ?? ''}
             onChange={setQuery}
           />
 
-          <span className="icon is-left" onClick={reset}>
+          <span className="icon is-left" onClick={resetQuery}>
             <i className="fas fa-search" aria-hidden="true" />
           </span>
         </p>
@@ -110,74 +118,27 @@ export const PeopleFilters: React.FC<Props> = ({ setHasPeopleFilter }) => {
       <div className="panel-block">
         <div className="level is-flex-grow-1 is-mobile" data-cy="CenturyFilter">
           <div className="level-left">
-            <Link
-              data-cy="century"
-              className={classNames('button mr-1', {
-                'is-info': centuryFilter.includes('16'),
-              })}
-              onClick={() => setCenturyFilter('16')}
-              to="#/people?centuries=16"
-            >
-              16
-            </Link>
-
-            <Link
-              data-cy="century"
-              className={classNames('button mr-1', {
-                'is-info': centuryFilter.includes('17'),
-              })}
-              onClick={() => setCenturyFilter('17')}
-              to="#/people?centuries=17"
-            >
-              17
-            </Link>
-
-            <Link
-              data-cy="century"
-              className={classNames('button mr-1', {
-                'is-info': centuryFilter.includes('18'),
-              })}
-              onClick={() => setCenturyFilter('18')}
-              to="#/people?centuries=18"
-            >
-              18
-            </Link>
-
-            <Link
-              data-cy="century"
-              className={classNames('button mr-1', {
-                'is-info': centuryFilter.includes('19'),
-              })}
-              onClick={() => setCenturyFilter('19')}
-              to="#/people?centuries=19"
-            >
-              19
-            </Link>
-
-            <Link
-              data-cy="century"
-              className={classNames('button mr-1', {
-                'is-info': centuryFilter.includes('20'),
-              })}
-              onClick={() => setCenturyFilter('20')}
-              to="#/people?centuries=20"
-            >
-              20
-            </Link>
+            {['16', '17', '18', '19', '20'].map(c => (
+              <Link
+                key={c}
+                data-cy="century"
+                to={setCenturies(c)}
+                className={classNames('button mr-1', {
+                  'is-info': centuries.includes(c),
+                })}
+              >
+                {c}
+              </Link>
+            ))}
           </div>
 
           <div className="level-right ml-4">
             <Link
               data-cy="centuryALL"
-              // className="button is-success is-outlined"
+              to={setCenturies('all')}
               className={classNames('button is-success', {
-                'is-outlined': !centuryFilter.includes('all'),
+                'is-outlined': centuries.length !== 0,
               })}
-              onClick={() => {
-                searchParams.delete('centuryFilter');
-                searchParams.set('centuryFilter', 'all');
-              }}
-              to="#/people"
             >
               All
             </Link>
@@ -187,13 +148,8 @@ export const PeopleFilters: React.FC<Props> = ({ setHasPeopleFilter }) => {
 
       <div className="panel-block">
         <Link
-          onClick={() => {
-            searchParams.set('genderFilter', 'all');
-            searchParams.set('centuryFilter', 'all');
-            searchParams.delete('query');
-          }}
+          to={resetAllFilters()}
           className="button is-link is-outlined is-fullwidth"
-          to="#/people"
         >
           Reset all filters
         </Link>

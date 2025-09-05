@@ -3,18 +3,20 @@ import { Loader } from './Loader';
 import { PeopleTable } from './PeopleTable';
 import { useEffect, useState } from 'react';
 import { Person } from '../types';
-// import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 
 export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [hasPeopleFilter, setHasPeopleFilter] = useState(false);
-  // const [searchParams] = useSearchParams();
+  const [updatedList, setUpdatedList] = useState<Person[]>([]);
+  const [searchParams] = useSearchParams();
 
-  // const gender = searchParams.get('genderFilter');
-  // const query = searchParams.get('query');
-  // const century = searchParams.getAll('centuryFilter');
+  const sex = searchParams.get('sex');
+  const query = searchParams.get('query');
+  const centuries = searchParams.getAll('centuries');
+  const sort = searchParams.get('sort');
+  const order = searchParams.get('order');
 
   useEffect(() => {
     setIsLoading(true);
@@ -26,15 +28,65 @@ export const PeoplePage = () => {
       .finally(() => setIsLoading(false));
   }, []);
 
-  // function filterePeople() {
+  // const filterePeople = () => {
   //   const filteredPeople = [...people];
 
-  //   if (gender === 'all') {
-
+  //   if (sex === 'm' || sex === 'f') {
+  //     filteredPeople.filter(person => person.sex === sex);
   //   }
+
+  //   if (centuries) {
+  //     filteredPeople.filter(
+  //       person => Math.floor(+person.born / 100) === +centuries - 1,
+  //     );
+  //   }
+
+  //   if (query) {
+  //     filteredPeople.filter(person => person.name.includes(query));
+  //   }
+
+  //   console.log(filteredPeople);
+
+  //   return filteredPeople;
   // }
 
-  const updatedList = !hasPeopleFilter ? [...people] : [...people];
+  useEffect(() => {
+    let result = [...people];
+
+    if (centuries.length > 0) {
+      result = result.filter(e =>
+        centuries.some(c => +c - 1 === Math.floor(e.born / 100)),
+      );
+    }
+
+    if (sex) {
+      result = result.filter(e => e.sex === sex);
+    }
+
+    if (query) {
+      result = result.filter(e =>
+        e.name.toLowerCase().includes(query.toLowerCase()),
+      );
+    }
+
+    if (sort) {
+      result = result.sort((p1, p2) => {
+        if (sort === 'name' || sort === 'sex') {
+          return order !== 'desc'
+            ? p1[sort].localeCompare(p2[sort])
+            : p2[sort].localeCompare(p1[sort]);
+        }
+
+        if (sort === 'born' || sort === 'died') {
+          return order !== 'desc' ? p1[sort] - p2[sort] : p2[sort] - p1[sort];
+        }
+
+        return 0;
+      });
+    }
+
+    setUpdatedList(result);
+  }, [sex, query, centuries, sort, order, people]);
 
   return (
     <div className="section">
@@ -43,7 +95,7 @@ export const PeoplePage = () => {
       <div className="block">
         <div className="columns is-desktop is-flex-direction-row-reverse">
           <div className="column is-7-tablet is-narrow-desktop">
-            <PeopleFilters setHasPeopleFilter={setHasPeopleFilter} />
+            <PeopleFilters />
           </div>
 
           <div className="column">
@@ -64,7 +116,7 @@ export const PeoplePage = () => {
                 <p>There are no people matching the current search criteria</p>
               )}
 
-              <PeopleTable updatedList={updatedList} people={people} />
+              <PeopleTable updatedList={updatedList} />
             </div>
           </div>
         </div>
